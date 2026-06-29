@@ -1,0 +1,72 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+backend/.venv/
+.venv/
+venv/
+env/
+
+# Environment Variables
+.env
+.env.*
+
+!.env.example
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Testing
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# =========================
+# IDEs
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Operating System Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# React (Future)
+# =========================
+frontend/node_modules/
+frontend/dist/
+
+# =========================
+# Build Files
+# =========================
+build/
+dist/
+
+# =========================
+# Docker
+# =========================
+*.pid
+
+# =========================
+# Database
+# =========================
+*.sqlite3
+*.db
+
+# =========================
+# Miscellaneous
+# =========================
+*.tmp
+*.bak
+
