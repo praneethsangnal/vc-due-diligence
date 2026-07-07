@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -6,7 +8,15 @@ class PlannerOutput(BaseModel):
         description="The category of the startup."
     )
 
-    required_agents: list[str] = Field(
+    required_agents: list[
+        Literal[
+            "market",
+            "finance",
+            "competition",
+            "product",
+            "risk",
+        ]
+    ] = Field(
         description="List of specialist agents required for this startup."
     )
 

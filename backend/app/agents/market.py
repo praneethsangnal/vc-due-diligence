@@ -2,7 +2,7 @@ from crewai import Agent, Crew, Task
 
 from app.core.config import settings
 from app.schemas.due_diligence import DueDiligenceState
-
+from app.schemas.market import MarketOutput
 
 def get_market_agent() -> Agent:
     return Agent(
@@ -31,32 +31,9 @@ Analyze ONLY the market aspects of the following startup.
 
 Startup Description:
 {state.startup_description}
-
-Your responsibilities:
-
-1. Estimate the market size.
-2. Evaluate market growth potential.
-3. Identify key opportunities.
-4. Identify major market risks.
-5. Summarize the overall market outlook.
-
-Return ONLY valid JSON in the following format:
-
-{{
-    "market_size": "...",
-    "growth_potential": "...",
-    "key_opportunities": [
-        "...",
-        "..."
-    ],
-    "key_risks": [
-        "...",
-        "..."
-    ],
-    "summary": "..."
-}}
 """,
-        expected_output="A JSON object containing the market analysis.",
+        expected_output="A MarketOutput object.",
+        output_pydantic=MarketOutput,
         agent=market_agent,
     )
 
@@ -65,5 +42,5 @@ Return ONLY valid JSON in the following format:
         tasks=[task],
         verbose=True,
     )
-
-    return crew.kickoff()
+    result=crew.kickoff()
+    return result.pydantic

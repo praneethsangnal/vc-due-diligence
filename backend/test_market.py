@@ -14,3 +14,4 @@ $150K ARR by serving B2B SaaS companies.
 result = run_market(state)
 
 print(result)
+print(type(result))

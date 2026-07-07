@@ -15,3 +15,4 @@ and primarily serves B2B SaaS companies.
 result = run_planner(startup_description)
 
 print(result)
+print(type(result))
