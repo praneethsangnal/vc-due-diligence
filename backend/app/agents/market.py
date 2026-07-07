@@ -42,5 +42,5 @@ Startup Description:
         tasks=[task],
         verbose=True,
     )
-    result=crew.akickoff()
+    result=await crew.akickoff()
     return result.pydantic

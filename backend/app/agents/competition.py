@@ -57,6 +57,6 @@ If information is unavailable, explicitly state that instead of making assumptio
         verbose=True,
     )
 
-    result = crew.akickoff()
+    result = await crew.akickoff()
 
     return result.pydantic

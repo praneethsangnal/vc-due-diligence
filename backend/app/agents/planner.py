@@ -22,7 +22,7 @@ def get_planner_agent() -> Agent:
     )
 
 
-def run_planner(startup_description: str) -> PlannerOutput:
+async def run_planner(startup_description: str) -> PlannerOutput:
     planner = get_planner_agent()
 
     task = Task(
@@ -55,6 +55,6 @@ Do not perform the actual analysis.
         verbose=True,
     )
 
-    result = crew.kickoff()
+    result = await crew.akickoff()
 
     return result.pydantic
