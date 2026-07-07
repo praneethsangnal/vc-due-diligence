@@ -22,7 +22,7 @@ def get_finance_agent() -> Agent:
     )
 
 
-def run_finance(state: DueDiligenceState) -> FinanceOutput:
+async def run_finance(state: DueDiligenceState) -> FinanceOutput:
     finance_agent = get_finance_agent()
 
     task = Task(
@@ -54,6 +54,6 @@ If information is unavailable, explicitly mention that instead of making assumpt
         verbose=True,
     )
 
-    result = crew.kickoff()
+    result = crew.akickoff()
 
     return result.pydantic

@@ -22,7 +22,7 @@ def get_market_agent() -> Agent:
     )
 
 
-def run_market(state: DueDiligenceState):
+async def run_market(state: DueDiligenceState):
     market_agent = get_market_agent()
 
     task = Task(
@@ -42,5 +42,5 @@ Startup Description:
         tasks=[task],
         verbose=True,
     )
-    result=crew.kickoff()
+    result=crew.akickoff()
     return result.pydantic
