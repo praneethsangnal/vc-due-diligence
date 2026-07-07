@@ -3,7 +3,8 @@ from pydantic import BaseModel
 from app.schemas.planner import PlannerOutput
 from app.schemas.market import MarketOutput
 from app.schemas.finance import FinanceOutput
-
+from app.schemas.competition import CompetitionOutput
+from app.schemas.risk import RiskOutput
 class DueDiligenceState(BaseModel):
     startup_description: str
 
@@ -13,11 +14,11 @@ class DueDiligenceState(BaseModel):
 
     product_analysis: str | None = None
 
-    competition_analysis: str | None = None
+    competition_analysis: CompetitionOutput | None = None
 
     finance_analysis: FinanceOutput | None = None
 
-    risk_analysis: str | None = None
+    risk_analysis: RiskOutput | None = None
 
     critic_review: str | None = None
 
