@@ -5,6 +5,8 @@ from app.schemas.market import MarketOutput
 from app.schemas.finance import FinanceOutput
 from app.schemas.competition import CompetitionOutput
 from app.schemas.risk import RiskOutput
+from app.schemas.product import ProductOutput
+
 class DueDiligenceState(BaseModel):
     startup_description: str
 
@@ -12,7 +14,7 @@ class DueDiligenceState(BaseModel):
 
     market_analysis: MarketOutput | None = None
 
-    product_analysis: str | None = None
+    product_analysis: ProductOutput | None = None
 
     competition_analysis: CompetitionOutput | None = None
 
