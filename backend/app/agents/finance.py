@@ -22,8 +22,25 @@ def get_finance_agent() -> Agent:
     )
 
 
-async def run_finance(state: DueDiligenceState) -> FinanceOutput:
+async def run_finance(
+    state: DueDiligenceState,
+    revision_instructions: str | None = None,
+) -> FinanceOutput:
     finance_agent = get_finance_agent()
+
+    revision_context = ""
+
+    if revision_instructions:
+        revision_context = f"""
+This analysis is being revised after a quality review by the Critic Agent.
+
+Revision Instructions:
+{revision_instructions}
+
+Address the specific issues identified above while remaining within your role
+as the Financial Analyst. Re-evaluate any unsupported or inconsistent conclusions
+using only the available evidence. Do not invent facts.
+"""
 
     task = Task(
         description=f"""
@@ -42,6 +59,8 @@ Evaluate:
 5. Overall financial summary.
 
 If information is unavailable, explicitly mention that instead of making assumptions.
+
+{revision_context}
 """,
         expected_output="Return a FinanceOutput object.",
         output_pydantic=FinanceOutput,

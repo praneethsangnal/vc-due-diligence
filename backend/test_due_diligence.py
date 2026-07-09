@@ -29,6 +29,15 @@ and primarily serves B2B SaaS companies.
     print("\n========== COMPETITION ==========\n")
     print(state.competition_analysis)
 
+    print("\n========== PRODUCT ==========\n")
+    print(state.product_analysis)
+
+    print("\n========== RISK ==========\n")
+    print(state.risk_analysis)
+
+    print("\n========== CRITIC ==========\n")
+    print(state.critic_review)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

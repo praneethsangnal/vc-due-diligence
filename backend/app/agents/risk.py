@@ -23,8 +23,25 @@ def get_risk_agent() -> Agent:
     )
 
 
-async def run_risk(state: DueDiligenceState) -> RiskOutput:
+async def run_risk(
+    state: DueDiligenceState,
+    revision_instructions: str | None = None,
+) -> RiskOutput:
     risk_agent = get_risk_agent()
+
+    revision_context = ""
+
+    if revision_instructions:
+        revision_context = f"""
+This analysis is being revised after a quality review by the Critic Agent.
+
+Revision Instructions:
+{revision_instructions}
+
+Address the specific issues identified above while remaining within your role
+as the Risk Analyst. Re-evaluate any unsupported or inconsistent conclusions
+using only the available evidence. Do not invent facts.
+"""
 
     task = Task(
         description=f"""
@@ -48,6 +65,8 @@ Use only information that is explicitly provided or can be reasonably inferred.
 Do not invent facts.
 
 If information is unavailable, explicitly state that it cannot be assessed.
+
+{revision_context}
 """,
         expected_output="Return a RiskOutput object.",
         output_pydantic=RiskOutput,
