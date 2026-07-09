@@ -1,160 +1,108 @@
-import asyncio
+from crewai import Agent, Crew, Task
 
-from app.agents.competition import run_competition
-from app.agents.critic import run_critic
-from app.agents.finance import run_finance
-from app.agents.market import run_market
-from app.agents.planner import run_planner
-from app.agents.product import run_product
-from app.agents.risk import run_risk
+from app.core.config import settings
+from app.schemas.critic import CriticOutput
 from app.schemas.due_diligence import DueDiligenceState
 
 
-AGENT_REGISTRY = {
-    "market": run_market,
-    "finance": run_finance,
-    "competition": run_competition,
-    "risk": run_risk,
-    "product": run_product,
-}
+def get_critic_agent() -> Agent:
+    return Agent(
+        role="Senior Venture Capital Due Diligence Reviewer",
+        goal=(
+            "Critically review all available specialist analyses, identify "
+            "material evidence gaps, unsupported conclusions, cross-agent "
+            "inconsistencies, and high-priority unanswered due diligence questions."
+        ),
+        backstory=(
+            "You are a senior venture capital partner responsible for quality "
+            "control before a startup reaches the investment committee. You do "
+            "not perform new market, financial, competitive, product, or risk "
+            "analysis. You critically evaluate the work already produced by "
+            "specialist analysts and request targeted revisions only when "
+            "material problems could affect the investment decision."
+        ),
+        llm=settings.MODEL_CRITIC,
+        verbose=True,
+    )
 
 
-STATE_MAPPING = {
-    "market": "market_analysis",
-    "finance": "finance_analysis",
-    "competition": "competition_analysis",
-    "risk": "risk_analysis",
-    "product": "product_analysis",
-}
+async def run_critic(state: DueDiligenceState) -> CriticOutput:
+    critic_agent = get_critic_agent()
 
+    specialist_analyses = {
+        "market": state.market_analysis,
+        "finance": state.finance_analysis,
+        "competition": state.competition_analysis,
+        "risk": state.risk_analysis,
+        "product": state.product_analysis,
+    }
 
-class DueDiligenceService:
+    available_analyses = {
+        name: analysis.model_dump()
+        for name, analysis in specialist_analyses.items()
+        if analysis is not None
+    }
 
-    async def run(
-        self,
-        startup_description: str,
-    ) -> DueDiligenceState:
+    task = Task(
+        description=f"""
+Review the complete venture capital due diligence evidence below.
 
-        # -----------------------------
-        # Step 1: Create shared state
-        # -----------------------------
-        state = DueDiligenceState(
-            startup_description=startup_description
-        )
+Original Startup Description:
+{state.startup_description}
 
-        # -----------------------------
-        # Step 2: Run planner
-        # -----------------------------
-        planner_output = await run_planner(startup_description)
-        state.planner_output = planner_output
+Specialist Analyses:
+{available_analyses}
 
-        # -----------------------------
-        # Step 3: Extract valid agents
-        # and remove duplicates while
-        # preserving planner order
-        # -----------------------------
-        active_agents = [
-            agent
-            for agent in dict.fromkeys(planner_output.required_agents)
-            if agent in AGENT_REGISTRY
-        ]
+Your responsibilities:
 
-        # -----------------------------
-        # Step 4: Run selected
-        # specialists in parallel
-        # -----------------------------
-        tasks = [
-            AGENT_REGISTRY[agent](state)
-            for agent in active_agents
-        ]
+1. MISSING EVIDENCE
+Identify critical information that is absent and materially limits the quality
+of the due diligence. Do not request a specialist revision merely because the
+original startup description does not contain information that no specialist
+could reasonably know.
 
-        if tasks:
-            results = await asyncio.gather(*tasks)
-        else:
-            results = []
+2. UNSUPPORTED CONCLUSIONS
+Identify conclusions made by specialists that are not adequately supported by
+the original startup description or the available evidence.
 
-        # -----------------------------
-        # Step 5: Store specialist
-        # outputs in shared state
-        # -----------------------------
-        for agent_name, result in zip(active_agents, results):
-            setattr(
-                state,
-                STATE_MAPPING[agent_name],
-                result,
-            )
+3. CROSS-AGENT INCONSISTENCIES
+Identify meaningful contradictions between specialist analyses. Only flag
+disagreements that could materially affect an investment decision.
 
-        # -----------------------------
-        # Step 6: First critic review
-        # -----------------------------
-        critic_output = await run_critic(state)
-        state.critic_review = critic_output
+4. HIGH-PRIORITY DUE DILIGENCE QUESTIONS
+Generate the most important questions that should be answered by the founders
+or through further investigation before making an investment decision.
 
-        # -----------------------------
-        # Step 7: Group revision
-        # requests by agent
-        # -----------------------------
-        revision_instructions = {}
+5. REVISION REQUESTS
+Request a specialist revision only when:
+- the specialist made a materially unsupported conclusion,
+- its analysis contradicts another specialist in a meaningful way,
+- or its reasoning can realistically be improved using the evidence already available.
 
-        for request in critic_output.revision_requests:
-            agent_name = request.agent_name
+Do NOT request a revision simply because information is missing from the
+original startup description. Missing founder-provided information should
+instead become a due diligence question.
 
-            if agent_name not in AGENT_REGISTRY:
-                continue
+For every revision request:
+- identify the exact specialist agent,
+- explain why revision is necessary,
+- provide specific instructions for what should be corrected.
 
-            instruction = (
-                f"Reason: {request.reason}\n"
-                f"Instructions: {request.instructions}"
-            )
+Do not make an investment decision.
+Do not perform new specialist analysis.
+Focus only on evidence quality, consistency, completeness, and reasoning quality.
+""",
+        expected_output="Return a CriticOutput object.",
+        output_pydantic=CriticOutput,
+        agent=critic_agent,
+    )
 
-            if agent_name in revision_instructions:
-                revision_instructions[agent_name] += (
-                    f"\n\n{instruction}"
-                )
-            else:
-                revision_instructions[agent_name] = instruction
+    crew = Crew(
+        agents=[critic_agent],
+        tasks=[task],
+        verbose=True,
+    )
 
-        # -----------------------------
-        # Step 8: Rerun only affected
-        # specialists in parallel
-        # -----------------------------
-        if revision_instructions:
+    result = await crew.akickoff()
 
-            revision_agents = list(
-                revision_instructions.keys()
-            )
-
-            revision_tasks = [
-                AGENT_REGISTRY[agent](
-                    state,
-                    revision_instructions[agent],
-                )
-                for agent in revision_agents
-            ]
-
-            revised_results = await asyncio.gather(
-                *revision_tasks
-            )
-
-            # -------------------------
-            # Step 9: Replace old
-            # outputs with revisions
-            # -------------------------
-            for agent_name, result in zip(
-                revision_agents,
-                revised_results,
-            ):
-                setattr(
-                    state,
-                    STATE_MAPPING[agent_name],
-                    result,
-                )
-
-            # -------------------------
-            # Step 10: Final critic
-            # review of updated state
-            # -------------------------
-            final_critic_output = await run_critic(state)
-            state.critic_review = final_critic_output
-
-        return state
+    return result.pydantic
