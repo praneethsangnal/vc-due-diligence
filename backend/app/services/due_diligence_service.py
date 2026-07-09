@@ -3,19 +3,26 @@ import asyncio
 from app.agents.competition import run_competition
 from app.agents.finance import run_finance
 from app.agents.market import run_market
+from app.agents.risk import run_risk
+from app.agents.product import run_product
 from app.agents.planner import run_planner
+
 from app.schemas.due_diligence import DueDiligenceState
 
 AGENT_REGISTRY = {
     "market": run_market,
     "finance": run_finance,
     "competition": run_competition,
+    "product": run_product,
+    "risk": run_risk,
 }
 
 STATE_MAPPING = {
     "market": "market_analysis",
     "finance": "finance_analysis",
     "competition": "competition_analysis",
+    "product": "product_analysis",
+    "risk": "risk_analysis",
 }
 
 

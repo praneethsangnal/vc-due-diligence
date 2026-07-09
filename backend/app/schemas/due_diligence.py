@@ -6,6 +6,7 @@ from app.schemas.finance import FinanceOutput
 from app.schemas.competition import CompetitionOutput
 from app.schemas.risk import RiskOutput
 from app.schemas.product import ProductOutput
+from app.schemas.critic import CriticOutput
 
 class DueDiligenceState(BaseModel):
     startup_description: str
@@ -22,6 +23,6 @@ class DueDiligenceState(BaseModel):
 
     risk_analysis: RiskOutput | None = None
 
-    critic_review: str | None = None
+    critic_review: CriticOutput | None = None
 
     final_recommendation: str | None = None
